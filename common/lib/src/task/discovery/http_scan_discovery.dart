@@ -29,7 +29,7 @@ class HttpScanDiscoveryService {
         ipList.length,
         (index) => () async => _doRequest(ipList[index], port, https),
       ),
-      concurrency: 50,
+      concurrency: 100,
     );
 
     return _runners[networkInterface]!.stream.where((device) => device != null).cast<Device>();
@@ -44,7 +44,7 @@ class HttpScanDiscoveryService {
           return _doRequest(device.$1, device.$2, https);
         },
       ),
-      concurrency: 50,
+      concurrency: 100,
     );
 
     return runner.stream.where((device) => device != null).cast<Device>();

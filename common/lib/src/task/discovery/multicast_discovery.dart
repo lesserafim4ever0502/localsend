@@ -125,8 +125,11 @@ class MulticastService {
             socket.socket.send(dto, InternetAddress(syncState.multicastGroup), syncState.port);
             
             // Also send to directed broadcast address if possible
-            final base = socket.interface.addresses.first.address.split('.').take(3).join('.');
-            socket.socket.send(dto, InternetAddress('$base.255'), syncState.port);
+            final address = socket.socket.address.address;
+            if (address.contains('.')) {
+              final base = address.split('.').take(3).join('.');
+              socket.socket.send(dto, InternetAddress('$base.255'), syncState.port);
+            }
             
             // Global broadcast fallback
             socket.socket.send(dto, InternetAddress('255.255.255.255'), syncState.port);

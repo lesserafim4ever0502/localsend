@@ -16,7 +16,7 @@ import 'package:refena_flutter/refena_flutter.dart';
 class StartSmartScan extends AsyncGlobalAction {
   /// Maximum number of interfaces to scan.
   /// If there are more interfaces, the first ones will be used or the user needs to select one.
-  static const maxInterfaces = 3;
+  static const maxInterfaces = 10;
 
   final bool forceLegacy;
 
@@ -32,28 +32,11 @@ class StartSmartScan extends AsyncGlobalAction {
     final https = ref.read(settingsProvider).https;
     await ref.redux(nearbyDevicesProvider).dispatchAsync(StartFavoriteScan(devices: favorites, https: https));
 
-    if (!forceLegacy) {
-      // Wait a bit before trying the legacy method.
-      // Skip waiting if [forceLegacy] is true.
-      await sleepAsync(1000);
-    }
-
-    // If no devices has been found, then switch to legacy discovery mode
-    // which is purely HTTP/TCP based.
-    final stillEmpty = ref.read(nearbyDevicesProvider).devices.isEmpty;
-    final stillInSendTab = ref.read(homePageControllerProvider).currentTab == HomeTab.send;
-    if (forceLegacy || (stillEmpty && stillInSendTab)) {
-      final networkInterfaces = ref.read(localIpProvider).localIps.take(maxInterfaces).toList();
-      if (networkInterfaces.isNotEmpty) {
-        await dispatchAsync(StartLegacySubnetScan(subnets: networkInterfaces));
-      }
-    } else {
-      if (!stillEmpty) {
-        emitMessage('Already found devices. This network seem to work, no need to start legacy scan.');
-      }
-      if (!stillInSendTab) {
-        emitMessage('User left the send tab. No need to start legacy scan.');
-      }
+    // Always run legacy discovery mode in parallel on restricted networks.
+    // This which is purely HTTP/TCP based and more reliable on Campus Wi-Fi.
+    final networkInterfaces = ref.read(localIpProvider).localIps.take(maxInterfaces).toList();
+    if (networkInterfaces.isNotEmpty) {
+      await dispatchAsync(StartLegacySubnetScan(subnets: networkInterfaces));
     }
   }
 }

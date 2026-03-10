@@ -39,6 +39,7 @@ enum ApiRoute {
   String targetRaw(String ip, int port, bool https, String version) {
     final protocol = https ? 'https' : 'http';
     final route = version == '1.0' ? v1 : v2;
-    return '$protocol://$ip:$port$route';
+    final String host = ip.contains(':') ? '[$ip]' : ip;
+    return '$protocol://$host:$port$route';
   }
 }

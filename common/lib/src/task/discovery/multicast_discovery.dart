@@ -118,7 +118,8 @@ class MulticastService {
       _logger.info('Announce via UDP');
       for (final socket in sockets) {
         try {
-          socket.socket.send(dto, InternetAddress(syncState.multicastGroup), syncState.port);
+          final targetGroup = socket.socket.address.type == InternetAddressType.IPv6 ? defaultMulticastGroupIpv6 : syncState.multicastGroup;
+          socket.socket.send(dto, InternetAddress(targetGroup), syncState.port);
           socket.socket.close();
         } catch (e) {
           _logger.warning('Could not send multicast message', e);
@@ -147,7 +148,8 @@ class MulticastService {
       final dto = _getMulticastDto(announcement: false);
       for (final socket in sockets) {
         try {
-          socket.socket.send(dto, InternetAddress(syncState.multicastGroup), syncState.port);
+          final targetGroup = socket.socket.address.type == InternetAddressType.IPv6 ? defaultMulticastGroupIpv6 : syncState.multicastGroup;
+          socket.socket.send(dto, InternetAddress(targetGroup), syncState.port);
           socket.socket.close();
         } catch (e) {
           _logger.warning('Could not send multicast message', e);
@@ -216,6 +218,17 @@ Future<List<_SocketResult>> _getSockets({
     } catch (e) {
       _logger.warning(
         'Could not bind UDP multicast port (ip: ${interface.addresses.map((a) => a.address).toList()}, group: $multicastGroup, port: $port)',
+        e,
+      );
+    }
+
+    try {
+      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv6, port ?? 0);
+      socket.joinMulticast(InternetAddress(defaultMulticastGroupIpv6), interface);
+      sockets.add(_SocketResult(interface, socket));
+    } catch (e) {
+      _logger.info(
+        'Could not bind UDP IPv6 multicast port (ip: ${interface.addresses.map((a) => a.address).toList()}, group: $defaultMulticastGroupIpv6, port: $port)',
         e,
       );
     }

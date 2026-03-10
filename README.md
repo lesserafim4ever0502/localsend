@@ -183,6 +183,7 @@ For more information, see the [contributing guide](https://github.com/localsend/
 | Issue              | Platform (Sending) | Platform (Receiving) | Solution                                                                                                                                |
 |--------------------|--------------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | Device not visible | Any                | Any                  | Make sure to disable AP-Isolation on your router. If it is enabled, connections between devices are forbidden.                          |
+| Device not visible | Any                | Any                  | If you are on an IPv6-only or campus network, ensure your network allows UDP IPv6 Multicast (ff02::167).                                |
 | Device not visible | Any                | Windows              | Make sure to configure your network as a "private" network. Windows might be more restrictive when the network is configured as public. |
 | Device not visible | macOS, iOS         | Any                  | You can try to toggle the "Local Network" permission under "Privacy" in the OS settings.                                                |
 | Speed too slow     | Any                | Any                  | Use 5 Ghz; Disable encryption on both devices                                                                                           |

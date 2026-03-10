@@ -30,3 +30,6 @@ const defaultDiscoveryTimeout = 500;
 /// because on some Android devices this is the only IP range
 /// that can receive UDP multicast messages.
 const defaultMulticastGroup = '224.0.0.167';
+
+/// The default IPv6 multicast group.
+const defaultMulticastGroupIpv6 = 'ff02::167';

@@ -32,4 +32,4 @@ const defaultDiscoveryTimeout = 500;
 const defaultMulticastGroup = '224.0.0.167';
 
 /// The default IPv6 multicast group.
-const defaultMulticastGroupIpv6 = 'ff02::167';
+const defaultMulticastGroupIpv6 = 'ff02::1'; // Link-local all-nodes

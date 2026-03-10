@@ -210,27 +210,33 @@ Future<List<_SocketResult>> _getSockets({
     blacklist: blacklist,
   );
   final sockets = <_SocketResult>[];
+
   for (final interface in interfaces) {
+    // IPv4
     try {
-      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port ?? 0);
-      socket.joinMulticast(InternetAddress(multicastGroup), interface);
-      sockets.add(_SocketResult(interface, socket));
+      final ipv4Address = interface.addresses.where((a) => a.type == InternetAddressType.IPv4).firstOrNull;
+      if (ipv4Address != null) {
+        // We bind to the specific address to ensure we can bind multiple sockets on the same port for different interfaces
+        // This is more reliable for sending announcements on Windows/Android.
+        final socket = await RawDatagramSocket.bind(ipv4Address, port ?? 0);
+        socket.broadcastEnabled = true;
+        socket.joinMulticast(InternetAddress(multicastGroup), interface);
+        sockets.add(_SocketResult(interface, socket));
+      }
     } catch (e) {
-      _logger.warning(
-        'Could not bind UDP multicast port (ip: ${interface.addresses.map((a) => a.address).toList()}, group: $multicastGroup, port: $port)',
-        e,
-      );
+      _logger.warning('Could not bind UDP multicast port for ${interface.name} (IPv4)', e);
     }
 
+    // IPv6
     try {
-      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv6, port ?? 0);
-      socket.joinMulticast(InternetAddress(defaultMulticastGroupIpv6), interface);
-      sockets.add(_SocketResult(interface, socket));
+      final ipv6Address = interface.addresses.where((a) => a.type == InternetAddressType.IPv6).firstOrNull;
+      if (ipv6Address != null) {
+        final socket = await RawDatagramSocket.bind(ipv6Address, port ?? 0);
+        socket.joinMulticast(InternetAddress(defaultMulticastGroupIpv6), interface);
+        sockets.add(_SocketResult(interface, socket));
+      }
     } catch (e) {
-      _logger.info(
-        'Could not bind UDP IPv6 multicast port (ip: ${interface.addresses.map((a) => a.address).toList()}, group: $defaultMulticastGroupIpv6, port: $port)',
-        e,
-      );
+      _logger.info('Could not bind UDP multicast port for ${interface.name} (IPv6)', e);
     }
   }
 

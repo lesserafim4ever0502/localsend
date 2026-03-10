@@ -118,11 +118,22 @@ class MulticastService {
       _logger.info('Announce via UDP');
       for (final socket in sockets) {
         try {
-          final targetGroup = socket.socket.address.type == InternetAddressType.IPv6 ? defaultMulticastGroupIpv6 : syncState.multicastGroup;
-          socket.socket.send(dto, InternetAddress(targetGroup), syncState.port);
+          if (socket.socket.address.type == InternetAddressType.IPv6) {
+            socket.socket.send(dto, InternetAddress(defaultMulticastGroupIpv6), syncState.port);
+          } else {
+            // Send to multicast group
+            socket.socket.send(dto, InternetAddress(syncState.multicastGroup), syncState.port);
+            
+            // Also send to directed broadcast address if possible
+            final base = socket.interface.addresses.first.address.split('.').take(3).join('.');
+            socket.socket.send(dto, InternetAddress('$base.255'), syncState.port);
+            
+            // Global broadcast fallback
+            socket.socket.send(dto, InternetAddress('255.255.255.255'), syncState.port);
+          }
           socket.socket.close();
         } catch (e) {
-          _logger.warning('Could not send multicast message', e);
+          _logger.warning('Could not send multicast/broadcast message', e);
         }
       }
     }

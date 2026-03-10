@@ -49,7 +49,7 @@ jobs:
           $galPaths = Get-ChildItem -Path "$env:LOCALAPPDATA\Pub\Cache\hosted\pub.dev\gal-*\windows\CMakeLists.txt" -ErrorAction SilentlyContinue
           if ($galPaths.Count -eq 0) { $galPaths = Get-ChildItem -Path "$env:PUB_CACHE\hosted\pub.dev\gal-*\windows\CMakeLists.txt" -ErrorAction SilentlyContinue }
           foreach ($path in $galPaths) {
-            (Get-Content $path.FullName).Replace('target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)', 'target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin windowsapp.lib)') | Set-Content $path.FullName
+            (Get-Content $path.FullName).Replace('target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)', 'find_library(WINDOWSAPP_LIB windowsapp) `n target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ${WINDOWSAPP_LIB})') | Set-Content $path.FullName
           }
 
       - name: Compile for Windows

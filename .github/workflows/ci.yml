@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/ipv6-discovery]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
   FLUTTER_VERSION: "3.38.10"

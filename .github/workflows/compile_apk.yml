@@ -1,6 +1,8 @@
 name: Compile APK
 
 on:
+  push:
+    branches: [fix/ipv6-discovery]
   workflow_dispatch:
 
 env:

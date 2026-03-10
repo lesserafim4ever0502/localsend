@@ -1,6 +1,8 @@
 name: Build windows zip
 
 on:
+  push:
+    branches: [fix/ipv6-discovery]
   workflow_dispatch:
 
 env:

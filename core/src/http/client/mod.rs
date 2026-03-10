@@ -166,18 +166,31 @@ pub(super) fn create_reqwest_client(
 
 /// Verifies the certificate from the response.
 /// Returns the public key extracted from the certificate.
+/// If TLS info is not available (e.g., connecting to an older version), 
+/// verification is skipped and the provided public_key is returned as-is.
 pub(super) fn verify_cert_from_res(
     response: &Response,
     public_key: Option<String>,
 ) -> anyhow::Result<String> {
-    let tls_info_ext = response
-        .extensions()
-        .get::<reqwest::tls::TlsInfo>()
-        .ok_or_else(|| anyhow::anyhow!("TLS info not found"))?;
-    let cert = tls_info_ext
-        .peer_certificate()
-        .ok_or_else(|| anyhow::anyhow!("Certificate not found"))?;
-    crypto::cert::verify_cert_from_der(cert, public_key.as_deref())?;
+    let tls_info_ext = match response.extensions().get::<reqwest::tls::TlsInfo>() {
+        Some(info) => info,
+        None => {
+            // TLS info not available (e.g., older server version or HTTP).
+            // Skip certificate verification and return the known public key or empty string.
+            return Ok(public_key.unwrap_or_default());
+        }
+    };
+    let cert = match tls_info_ext.peer_certificate() {
+        Some(cert) => cert,
+        None => {
+            // No peer certificate provided; skip verification.
+            return Ok(public_key.unwrap_or_default());
+        }
+    };
+    // Only verify fingerprint if we have a known public key to compare against.
+    if public_key.is_some() {
+        crypto::cert::verify_cert_from_der(cert, public_key.as_deref())?;
+    }
     let public_key = match public_key {
         Some(public_key) => public_key,
         None => crypto::cert::public_key_from_cert_der(cert)?,

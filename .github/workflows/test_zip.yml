@@ -51,6 +51,10 @@ jobs:
           foreach ($path in $galPaths) {
             (Get-Content $path.FullName).Replace('target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)', 'find_library(WINDOWSAPP_LIB windowsapp) `n target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ${WINDOWSAPP_LIB})') | Set-Content $path.FullName
           }
+          
+          # Patch main runner too
+          $runnerPath = "windows/runner/CMakeLists.txt"
+          (Get-Content $runnerPath).Replace('target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")', 'target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib") `n find_library(WINDOWSAPP_LIB windowsapp) `n target_link_libraries(${BINARY_NAME} PRIVATE ${WINDOWSAPP_LIB})') | Set-Content $runnerPath
 
       - name: Compile for Windows
         working-directory: app
